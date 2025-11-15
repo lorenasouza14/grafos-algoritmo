@@ -116,7 +116,7 @@ def grau_vertices(grafo, nao_direcionado=False):
         graus[vertice] = {'in': 0, 'out': len(grafo[vertice]), 'total': 0}
 
     if not nao_direcionado:
-       
+    
         for origem, vizinhos in grafo.items():
             for destino in vizinhos:
                 if destino not in graus:
@@ -144,9 +144,86 @@ def percurso_valido(grafo, caminho):
         origem = caminho[i]
         destino = caminho[i + 1]
         if not existe_aresta(grafo, origem, destino):
-            return False # assim que uma ligação falha, o caminho é inválido
+            return False
     return True
 
+
+def bfs(grafo, inicio, direcionado=True):
+    if inicio not in grafo:
+        print("Vértice inicial não existe.")
+        return [], {}
+
+    fila = [inicio]
+    visitados = set([inicio])
+    ordem = []
+    
+
+    while fila:
+        atual = fila.pop(0)
+        ordem.append(atual)
+
+        vizinhos = grafo[atual][:]
+        vizinhos.sort()
+
+        for v in vizinhos:
+            if v not in visitados:
+                visitados.add(v)
+                
+                fila.append(v)
+
+        if not direcionado:
+            for u in grafo:
+                if atual in grafo[u]:
+                    if u not in visitados:
+                        visitados.add(u)
+                        
+                        fila.append(u)
+
+    return ordem
+
+
+def menor_caminho_bfs(grafo, inicio, destino, direcionado=True):
+    if inicio not in grafo or destino not in grafo:
+        print("Vértice inicial ou final não existe.")
+        return None
+
+    from collections import deque
+
+    fila = deque([inicio])
+    visitados = set([inicio])
+
+    anterior = {inicio: None}
+
+    while fila:
+        atual = fila.popleft()
+
+        if atual == destino:
+            break
+
+        for v in sorted(grafo[atual]):
+            if v not in visitados:
+                visitados.add(v)
+                anterior[v] = atual
+                fila.append(v)
+
+        if not direcionado:
+            for u in grafo:
+                if atual in grafo[u] and u not in visitados:
+                    visitados.add(u)
+                    anterior[u] = atual
+                    fila.append(u)
+
+    if destino not in anterior:
+        return None
+
+    caminho = []
+    atual = destino
+    while atual is not None:
+        caminho.append(atual)
+        atual = anterior[atual]
+
+    caminho.reverse()
+    return caminho
 
 def main():
     grafo = criar_grafo()
@@ -163,6 +240,8 @@ def main():
         print("8 - Exibir Grau dos Vértices")
         print("9 - Verificar se um percurso é possível")
         print("10 - Verificar se existe uma aresta entre dois vértices")
+        print("11 - Busca em Largura (BFS)")
+        print("12 - Menor Caminho (BFS)")
         print("0 - Sair")
 
         
@@ -223,6 +302,25 @@ def main():
             else:
                 print(f"Não existe aresta de {o} para {d}.")
 
+        elif opcao == '11':
+            inicio = input("Digite o vértice inicial: ").strip()
+            tipo = input("Grafo é direcionado? (s/n): ").strip().lower() == 's'
+    
+            ordem = bfs(grafo, inicio, direcionado=tipo)
+            print("Ordem BFS:", " -> ".join(ordem))
+
+        elif opcao == '12':
+            inicio = input("Vértice inicial: ").strip()
+            destino = input("Vértice destino: ").strip()
+            tipo = input("Grafo é direcionado? (s/n): ").strip().lower() == 's'
+
+            caminho = menor_caminho_bfs(grafo, inicio, destino, direcionado=tipo)
+
+            if caminho:
+                print("Menor caminho:", " -> ".join(caminho))
+            else:
+                print("Não existe caminho entre os vértices.")
+            
         elif opcao == '0':
             print("Saindo...")
             break
