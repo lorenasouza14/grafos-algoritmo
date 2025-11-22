@@ -225,6 +225,87 @@ def menor_caminho_bfs(grafo, inicio, destino, direcionado=True):
     caminho.reverse()
     return caminho
 
+def dfs_iterativa(grafo, inicio, direcionado=True):
+    if inicio not in grafo:
+        print("Vértice inicial não existe.")
+        return []
+
+    visitados = set()
+    ordem = []
+    stack = [inicio]
+
+    while stack:
+        atual = stack.pop()  # pop da pilha (LIFO)
+        if atual in visitados:
+            continue
+
+        visitados.add(atual)
+        ordem.append(atual)
+
+        for viz in grafo[atual]:
+            if viz not in visitados:
+                stack.append(viz)
+
+        if not direcionado:
+            for u in grafo:
+                if atual in grafo[u] and u not in visitados:
+                    stack.append(u)
+
+    return ordem
+
+
+def tem_ciclo_bp(grafo, direcionado=False):
+    visitado = set()
+    pilha = []           
+    em_pilha = set()     
+
+    def dfs_dir(v):
+        visitado.add(v)
+        pilha.append(v)
+        em_pilha.add(v)
+
+        for viz in grafo[v]:
+            if viz not in visitado:
+                ciclo = dfs_dir(viz)
+                if ciclo:
+                    return ciclo
+            elif viz in em_pilha:
+                i = pilha.index(viz)
+                return pilha[i:]  
+
+        pilha.pop()
+        em_pilha.remove(v)
+        return None
+
+    def dfs_n_dir(v, pai):
+        visitado.add(v)
+        pilha.append(v)
+
+        for viz in grafo[v]:
+            if viz not in visitado:
+                ciclo = dfs_n_dir(viz, v)
+                if ciclo:
+                    return ciclo
+            elif viz != pai:
+                i = pilha.index(viz)
+                return pilha[i:]  
+
+        pilha.pop()
+        return None
+
+    for v in grafo:
+        if v not in visitado:
+            pilha.clear()
+            if direcionado:
+                ciclo = dfs_dir(v)
+            else:
+                ciclo = dfs_n_dir(v, None)
+            if ciclo:
+                return ciclo
+
+    return None
+
+
 def main():
     grafo = criar_grafo()
     
@@ -240,8 +321,10 @@ def main():
         print("8 - Exibir Grau dos Vértices")
         print("9 - Verificar se um percurso é possível")
         print("10 - Verificar se existe uma aresta entre dois vértices")
-        print("11 - Busca em Largura (BFS)")
-        print("12 - Menor Caminho (BFS)")
+        print("11 - Busca em Largura")
+        print("12 - Menor Caminho")
+        print("13 - Busca em Profundidade")
+        print("14 - Detectar Ciclo em Busca em Profundidade")
         print("0 - Sair")
 
         
@@ -320,7 +403,25 @@ def main():
                 print("Menor caminho:", " -> ".join(caminho))
             else:
                 print("Não existe caminho entre os vértices.")
+        
+        elif opcao == '13':
+            inicio = input("Digite o vértice inicial: ").strip()
+            tipo = input("Grafo é direcionado? (s/n): ").strip().lower() == 's'
+
+            ordem = dfs_iterativa(grafo, inicio, direcionado=tipo)
+            print("Ordem DFS:", " -> ".join(ordem))
+
             
+        elif opcao == '14':
+            tipo = input("O grafo é direcionado? (s/n): ").strip().lower() == 's'
+            ciclo = tem_ciclo_bp(grafo, direcionado=tipo)
+
+            if ciclo:
+                print("O grafo POSSUI ciclo:")
+                print(" -> ".join(ciclo + [ciclo[0]]))  # fecha o ciclo
+            else:
+                print("O grafo NÃO possui ciclo.")
+
         elif opcao == '0':
             print("Saindo...")
             break
